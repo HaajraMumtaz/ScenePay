@@ -14,5 +14,5 @@ def create_app():
     
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
-
+    db.init_app(app)
     return app
