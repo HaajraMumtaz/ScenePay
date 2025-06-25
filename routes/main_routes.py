@@ -22,3 +22,15 @@ def submit_bill():
             <button type="submit">Submit</button>
         </form>
     '''
+
+@main.route('/new-bill', methods=['GET', 'POST'])
+def new_bill():
+    if request.method == 'POST':
+        bill_text = request.form['bill_text']
+        # you’ll later call your parser here and save to DB
+        print("Bill text received:", bill_text)
+        return redirect(url_for('main.home'))
+    return render_template('new_bill.html')
+@main.route('/bills')
+def view_bills():
+    return "🧾 Bills will be shown here soon!"
