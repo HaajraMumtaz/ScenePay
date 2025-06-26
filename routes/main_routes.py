@@ -26,10 +26,12 @@ def submit_bill():
 @main.route('/new-bill', methods=['GET', 'POST'])
 def new_bill():
     if request.method == 'POST':
-        bill_text = request.form['bill_text']
-        # you’ll later call your parser here and save to DB
-        print("Bill text received:", bill_text)
-        return redirect(url_for('main.home'))
+      if request.method == 'POST':
+        bill_text = request.form.get('bill_text')
+        parsed_data = parse_bill_text(bill_text)  # You'll write this function
+        print(parsed_data)  # For now, just test it
+        return render_template('results.html', parsed_data=parsed_data)
+
     return render_template('new_bill.html')
 @main.route('/bills')
 def view_bills():
