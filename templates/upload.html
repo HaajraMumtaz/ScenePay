@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Receipt - BillSplitter+</title>
+</head>
+<body>
+  <h2>📄 Upload Your Receipt</h2>
+  
+  <!-- Form to upload image -->
+  <form action="{{ url_for('upload_receipt') }}" method="post" enctype="multipart/form-data">
+    <label for="receipt">Select image file:</label><br>
+    <input type="file" name="receipt" accept="image/*" required><br><br>
+
+    <button type="submit">Upload and Continue</button>
+  </form>
+
+  <hr>
+
+  <!-- OR: Continue without uploading -->
+  <p>Don't have a receipt? You can still add everything manually.</p>
+  <form action="{{ url_for('form') }}" method="get">
+    <button type="submit">Continue without uploading</button>
+  </form>
+
+</body>
+</html>
