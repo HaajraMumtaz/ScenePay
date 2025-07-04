@@ -4,8 +4,9 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from dotenv import load_dotenv
 from .routes import register_blueprints
+from .extensions import db
 load_dotenv() 
-db = SQLAlchemy()
+
 login_manager = LoginManager()
 
 
