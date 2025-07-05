@@ -1,14 +1,15 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timezone
 from .extensions import db
-
+#class TravelExpense(db.model):
+  
 class User(db.Model):
     id=db.Column(db.Integer,primary_key=True)
     username=db.Column(db.String(80),nullable=False,unique=True)
     password=db.Column(db.String(80),nullable=False)
     groups_created=db.relationship("Group",backref="Creator")
     expenses_paid = db.relationship("Expense", backref="payer")
-    travel_paid = db.relationship("TravelExpense", backref="paid_by")
+    #travel_paid = db.relationship("TravelExpense", backref="paid_by")
 
 class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -18,7 +19,7 @@ class Group(db.Model):
 
     members = db.relationship("Membership", backref="group")
     expenses = db.relationship("Expense", backref="group")
-    travel_expenses = db.relationship("TravelExpense", backref="group")
+    #travel_expenses = db.relationship("TravelExpense", backref="group")
 
 class Membership(db.Model):
     id=db.Column(db.Integer,primary_key=True)
