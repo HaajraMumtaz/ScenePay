@@ -1,4 +1,6 @@
 from flask import Blueprint,flash, session,render_template, request, redirect, url_for
+from werkzeug.security import generate_password_hash,check_password_hash
+from flask_login import login_user
 from ..forms import LoginForm, RegisterForm
 from ..models import User
 
@@ -16,30 +18,44 @@ def index():
 def register():
     form = RegisterForm()
     if form.validate_on_submit():
-        existing_user = User.query.filter_by(username=form.username.data).first()
-        if existing_user:
-            flash("Username already taken.")
-            return redirect('/register')
+        username = form.username.data
+        email = form.email.data
+        password = form.password.data
 
-        new_user = User(username=form.username.data, password=form.password.data)
+        # Check if user already exists
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            flash('Username already exists. Try a different one.', 'danger')
+            return render_template('register.html', form=form)
+
+        # Create user
+        hashed_password = generate_password_hash(password)
+        new_user = User(username=username, email=email, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
-        flash("Registered! Please log in.")
-        return redirect('/login')
+        login_user(new_user)
+
+        flash('Registration successful! You are now logged in.', 'success')
+        return redirect(url_for('main.home'))
 
     return render_template('register.html', form=form)
 @main.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
-        if user and user.password == form.password.data:
-            session['user_id'] = user.id
-            session['username'] = user.username
-            return redirect('/dashboard')
-        flash("Invalid credentials")
+        username = form.username.data
+        password = form.password.data
+
+        user = User.query.filter_by(username=username).first()
+
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            flash("Login successful!", "success")
+            return redirect(url_for('main.home'))
+        else:
+            flash("Invalid username or password.", "danger")
+
     return render_template('login.html', form=form)
-# Bill submission route (you can extend this later)
 
 @main.route('/dashboard')
 def dashboard():
@@ -78,3 +94,23 @@ def new_bill():
 @main.route('/bills')
 def view_bills():
     return "🧾 Bills will be shown here soon!"
+
+@main.route('/create_group', methods=['GET', 'POST'])
+def create_group():
+    if request.method == 'POST':
+        group_name = request.form.get('group_name')
+        description = request.form.get('description')
+        num_participants = int(request.form.get('num_participants'))
+
+        # Save group to DB
+        new_group = Group(name=group_name, description=description)
+        db.session.add(new_group)
+        db.session.commit()
+
+        # Temporarily store in session to access later
+        session['group_id'] = new_group.id
+        session['num_participants'] = num_participants
+
+        return redirect(url_for('upload_routes.upload_receipt'))  # Next step
+
+    return render_template('create_group.html')
