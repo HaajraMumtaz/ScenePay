@@ -1,6 +1,6 @@
 from flask import Blueprint,flash, session,render_template, request, redirect, url_for
 from werkzeug.security import generate_password_hash,check_password_hash
-from flask_login import login_user
+from flask_login import login_user,current_user
 from ..forms import LoginForm, RegisterForm
 from ..models import User
 
@@ -11,7 +11,7 @@ main = Blueprint('main', __name__)
 
 # Home route
 @main.route('/')
-def index():
+def home():
     return redirect('/login')
 
 @main.route('/register', methods=['GET', 'POST'])
@@ -19,7 +19,6 @@ def register():
     form = RegisterForm()
     if form.validate_on_submit():
         username = form.username.data
-        email = form.email.data
         password = form.password.data
 
         # Check if user already exists
@@ -30,13 +29,14 @@ def register():
 
         # Create user
         hashed_password = generate_password_hash(password)
-        new_user = User(username=username, email=email, password=hashed_password)
+        new_user = User(username=username, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
         login_user(new_user)
 
         flash('Registration successful! You are now logged in.', 'success')
-        return redirect(url_for('main.home'))
+        print("ok")
+        return redirect(url_for('main.dashboard'))
 
     return render_template('register.html', form=form)
 @main.route('/login', methods=['GET', 'POST'])
@@ -51,7 +51,7 @@ def login():
         if user and check_password_hash(user.password, password):
             login_user(user)
             flash("Login successful!", "success")
-            return redirect(url_for('main.home'))
+            return redirect(url_for('main.dashboard'))
         else:
             flash("Invalid username or password.", "danger")
 
@@ -59,9 +59,9 @@ def login():
 
 @main.route('/dashboard')
 def dashboard():
-    if 'user_id' not in session:
-        return redirect('/login')
-    return render_template('dashboard.html', username=session['username'])
+  if not current_user.is_authenticated:
+        return redirect(url_for('main.login'))
+  return render_template('dashboard.html', username=current_user.username)
 @main.route('/logout')
 def logout():
     session.clear()

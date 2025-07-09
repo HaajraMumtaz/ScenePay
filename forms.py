@@ -9,14 +9,9 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Login')
 
 class RegisterForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired(), Length(min=3, max=25)])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[
-        DataRequired(),
-        Length(min=6, message='Password must be at least 6 characters long.')
+    username = StringField("Username", validators=[DataRequired(), Length(min=3, max=20)])
+    password = PasswordField("Password", validators=[DataRequired()])
+    confirm_password = PasswordField("Confirm Password", validators=[
+        DataRequired(), EqualTo('password', message="Passwords must match.")
     ])
-    confirm_password = PasswordField('Confirm Password', validators=[
-        DataRequired(),
-        EqualTo('password', message='Passwords must match.')
-    ])
-    submit = SubmitField('Register')
+    submit = SubmitField("Register")

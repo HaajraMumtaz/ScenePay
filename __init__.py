@@ -1,20 +1,21 @@
-import os
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
-from dotenv import load_dotenv
-from .routes import register_blueprints
-from .extensions import db
-load_dotenv() 
-
-login_manager = LoginManager()
-
+from .extensions import db, login_manager
+from .config import Config
 
 def create_app():
     app = Flask(__name__)
-    
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+    app.config.from_object(Config)
+
     db.init_app(app)
-    register_blueprints(app)
+    login_manager.init_app(app)
+
+    from .models import User  
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+
+    from .routes import main
+    app.register_blueprint(main)
+
     return app
