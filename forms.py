@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
+from wtforms import StringField, PasswordField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, Email, EqualTo, Length
 
 
@@ -15,3 +15,9 @@ class RegisterForm(FlaskForm):
         DataRequired(), EqualTo('password', message="Passwords must match.")
     ])
     submit = SubmitField("Register")
+
+
+class CreateGroupForm(FlaskForm):
+    name = StringField('Group Name', validators=[DataRequired(), Length(max=100)])
+    description = TextAreaField('Description', validators=[Length(max=300)])
+    submit = SubmitField('Create')

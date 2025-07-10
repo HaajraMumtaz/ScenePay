@@ -1,8 +1,9 @@
 from flask import Blueprint,flash, session,render_template, request, redirect, url_for
 from werkzeug.security import generate_password_hash,check_password_hash
-from flask_login import login_user,current_user
-from ..forms import LoginForm, RegisterForm
-from ..models import User
+from flask_login import login_user,current_user,login_required
+from ..forms import LoginForm, RegisterForm, CreateGroupForm
+from ..models import User, Group
+from datetime import datetime
 
 from ..extensions import db
 
@@ -96,21 +97,18 @@ def view_bills():
     return "🧾 Bills will be shown here soon!"
 
 @main.route('/create_group', methods=['GET', 'POST'])
+@login_required
 def create_group():
-    if request.method == 'POST':
-        group_name = request.form.get('group_name')
-        description = request.form.get('description')
-        num_participants = int(request.form.get('num_participants'))
-
-        # Save group to DB
-        new_group = Group(name=group_name, description=description)
+    form = CreateGroupForm()
+    if form.validate_on_submit():
+        new_group = Group(
+            name=form.name.data,
+            created_by=current_user.id,
+            created_at=datetime.utcnow()
+        )
         db.session.add(new_group)
         db.session.commit()
+        flash('Group created successfully!', 'success')
+        return redirect(url_for('main.home'))  # or wherever you want
+    return render_template('create_group.html', form=form)
 
-        # Temporarily store in session to access later
-        session['group_id'] = new_group.id
-        session['num_participants'] = num_participants
-
-        return redirect(url_for('upload_routes.upload_receipt'))  # Next step
-
-    return render_template('create_group.html')
