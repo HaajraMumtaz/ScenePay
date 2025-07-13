@@ -1,0 +1,12 @@
+<h2>Your Groups</h2>
+<ul>
+  {% for group in groups %}
+    <li>
+      <a href="{{ url_for('main.group_detail', group_id=group.id) }}">
+        {{ group.name }}
+      </a>
+    </li>
+  {% else %}
+    <li>No groups yet. <a href="{{ url_for('main.create_group') }}">Create one</a></li>
+  {% endfor %}
+</ul>

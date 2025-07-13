@@ -59,10 +59,17 @@ def login():
     return render_template('login.html', form=form)
 
 @main.route('/dashboard')
+@login_required
 def dashboard():
-  if not current_user.is_authenticated:
-        return redirect(url_for('main.login'))
-  return render_template('dashboard.html', username=current_user.username)
+    # Query all groups created by the logged-in user
+    user_groups = Group.query.filter_by(created_by=current_user.id).all()
+
+    return render_template(
+        'dashboard.html',
+        username=current_user.username,
+        groups=user_groups
+    )
+
 @main.route('/logout')
 def logout():
     session.clear()
@@ -104,11 +111,31 @@ def create_group():
         new_group = Group(
             name=form.name.data,
             created_by=current_user.id,
-            created_at=datetime.utcnow()
+            created_at=datetime.utcnow(),
+            description=form.description.data
         )
         db.session.add(new_group)
         db.session.commit()
         flash('Group created successfully!', 'success')
-        return redirect(url_for('main.home'))  # or wherever you want
+        return redirect(url_for('main.dashboard'))  # or wherever you want
     return render_template('create_group.html', form=form)
+
+
+# @main.route('/groups')
+# @login_required
+# def groups():
+#     user_groups = Group.query.filter_by(created_by=current_user.id).all()
+#     return render_template('groups.html', groups=user_groups)
+@main.route('/group/<int:group_id>')
+@login_required
+def group_detail(group_id):
+    group = Group.query.get_or_404(group_id)
+
+    # (Optional) verify user is allowed to view:
+    if group.created_by != current_user.id:
+        flash("You do not have permission to view this group.", "danger")
+        return redirect(url_for('main.dashboard'))
+
+    return render_template('group_detail.html', group=group)
+
 
