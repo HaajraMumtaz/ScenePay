@@ -5,23 +5,20 @@
   <title>Upload Receipt - BillSplitter+</title>
 </head>
 <body>
-  <h2>📄 Upload Your Receipt</h2>
-  
-  <!-- Form to upload image -->
-  <form action="{{ url_for('upload_receipt') }}" method="post" enctype="multipart/form-data">
+  <h2>📄 Upload Your Receipt for {{ group.name }}</h2>
+
+  <form action="{{ url_for('upload.upload_receipt', group_id=group.id) }}" method="post" enctype="multipart/form-data">
     <label for="receipt">Select image file:</label><br>
-    <input type="file" name="receipt" accept="image/*" required><br><br>
+    <input type="file" name="receipt_image" accept="image/*" required><br><br>
 
     <button type="submit">Upload and Continue</button>
   </form>
 
   <hr>
 
-  <!-- OR: Continue without uploading -->
   <p>Don't have a receipt? You can still add everything manually.</p>
-  <form action="{{ url_for('form') }}" method="get">
+  <form action="{{ url_for('main.manual_form', group_id=group.id) }}" method="get">
     <button type="submit">Continue without uploading</button>
   </form>
-
 </body>
 </html>

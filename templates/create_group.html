@@ -7,4 +7,5 @@
     <div>{{ form.description.label }} {{ form.description() }}</div>
     <div>{{ form.submit() }}</div>
   </form>
+  <form action="{{ url_for('main.manual_form', group_id=group.id) }}" method="get">
 {% endblock %}
