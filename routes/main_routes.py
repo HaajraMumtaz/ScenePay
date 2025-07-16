@@ -4,7 +4,6 @@ from flask_login import login_user,current_user,login_required
 from ..forms import LoginForm, RegisterForm, CreateGroupForm
 from ..models import User, Group
 from datetime import datetime
-
 from ..extensions import db
 
 # Create the blueprint
@@ -117,7 +116,10 @@ def create_group():
         db.session.add(new_group)
         db.session.commit()
         flash('Group created successfully!', 'success')
-        return redirect(url_for('main.dashboard'))  # or wherever you want
+ 
+        return redirect(url_for('upload.upload_receipt', group_id=new_group.id))
+    
+
     return render_template('create_group.html', form=form)
 
 

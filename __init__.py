@@ -18,7 +18,7 @@ def create_app():
         return User.query.get(int(user_id))
     print("✅ Database URI:", app.config['SQLALCHEMY_DATABASE_URI'])
 
-    from .routes import main
-    app.register_blueprint(main)
+    from .routes import register_blueprints
+    register_blueprints(app)
 
     return app
