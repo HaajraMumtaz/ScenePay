@@ -111,7 +111,8 @@ def create_group():
             name=form.name.data,
             created_by=current_user.id,
             created_at=datetime.utcnow(),
-            description=form.description.data
+            description=form.description.data,
+            num_members=form.num_members.data
         )
         db.session.add(new_group)
         db.session.commit()

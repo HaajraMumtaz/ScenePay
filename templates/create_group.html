@@ -1,11 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-  <h2>Create New Group</h2>
-  <form method="POST">
-    {{ form.hidden_tag() }}
-    <div>{{ form.name.label }} {{ form.name() }}</div>
-    <div>{{ form.description.label }} {{ form.description() }}</div>
-    <div>{{ form.submit() }}</div>
-  </form>
- 
+<h2>Create New Group</h2>
+<form method="POST">
+  {{ form.hidden_tag() }}
+  <div>{{ form.name.label }} {{ form.name() }}</div>
+  <div>{{ form.description.label }} {{ form.description() }}</div>
+  <p>
+    {{ form.num_members.label }}<br>
+    {{ form.num_members(size=5) }}<br>
+    {% for error in form.num_members.errors %}
+    <span style="color: red;">{{ error }}</span>
+    {% endfor %}
+  </p>
+  <div>{{ form.submit() }}</div>
+</form>
+
 {% endblock %}

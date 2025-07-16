@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, TextAreaField
-from wtforms.validators import DataRequired, Email, EqualTo, Length
+from wtforms import StringField, PasswordField, SubmitField, TextAreaField,IntegerField
+from wtforms.validators import DataRequired, Email, EqualTo, Length,NumberRange
 
 
 class LoginForm(FlaskForm):
@@ -20,4 +20,5 @@ class RegisterForm(FlaskForm):
 class CreateGroupForm(FlaskForm):
     name = StringField('Group Name', validators=[DataRequired(), Length(max=100)])
     description = TextAreaField('Description', validators=[Length(max=300)])
+    num_members = IntegerField("Number of people in this visit", validators=[DataRequired(), NumberRange(min=1)])
     submit = SubmitField('Create')
