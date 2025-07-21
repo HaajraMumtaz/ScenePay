@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manual Bill Split</title>
+  <style>
+    .member-block {
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+      padding: 10px;
+    }
+    .item-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 5px;
+    }
+    input[type="text"], input[type="number"] {
+      padding: 5px;
+      width: 150px;
+    }
+    button.add-item {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>🧾 Enter Members & Items</h2>
+
+  <form action="{{ url_for('main.submit_manual_form', group_id=group.id) }}" method="post">
+    {{ form.hidden_tag() }}
+
+    <div id="members-container"></div>
+
+    <button type="button" onclick="addMember()">➕ Add Member</button>
+    <br><br>
+
+    <label>Total Tax / Service Charges:</label>
+    <input type="number" name="extra_charges" step="0.01">
+    <br><br>
+
+    <label>Paid by (name):</label>
+    <input type="text" name="paid_by">
+    <br><br>
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <script>
+    let memberCount = 0;
+
+    function addMember() {
+      const membersContainer = document.getElementById('members-container');
+
+      const memberDiv = document.createElement('div');
+      memberDiv.className = 'member-block';
+      memberDiv.id = `member-${memberCount}`;
+
+      memberDiv.innerHTML = `
+        <h3>Member ${memberCount + 1}</h3>
+        <label>Name:</label>
+        <input type="text" name="member_${memberCount}_name" required><br><br>
+        <div class="items" id="items-${memberCount}"></div>
+        <button type="button" class="add-item" onclick="addItem(${memberCount})">➕ Add Item</button>
+      `;
+
+      membersContainer.appendChild(memberDiv);
+      memberCount++;
+    }
+
+    function addItem(memberIndex) {
+      const itemsDiv = document.getElementById(`items-${memberIndex}`);
+
+      const itemIndex = itemsDiv.children.length;
+      const row = document.createElement('div');
+      row.className = 'item-row';
+      row.innerHTML = `
+        <input type="text" name="member_${memberIndex}_item_${itemIndex}_name" placeholder="Item name" required>
+        <input type="number" name="member_${memberIndex}_item_${itemIndex}_price" placeholder="Price" step="0.01" required>
+        <input type="number" name="member_${memberIndex}_item_${itemIndex}_share" placeholder="Share (e.g. 1 or 0.5)" step="0.01" required>
+      `;
+
+      itemsDiv.appendChild(row);
+    }
+  </script>
+</body>
+</html>

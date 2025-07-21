@@ -141,4 +141,60 @@ def group_detail(group_id):
 
     return render_template('group_detail.html', group=group)
 
+@main.route('/manual_form/<int:group_id>', methods=["GET", "POST"])
+def manual_form(group_id):
+    ocr_data = session.get('ocr_items', {})  
+    form = YourMainForm() 
 
+    # ... handle form submission later
+
+    return render_template("manual_form.html", form=form, group_id=group_id, ocr_data=ocr_data)
+
+@main.route('/manual_form/<int:group_id>', methods=['POST'])
+@login_required
+def submit_manual_form(group_id):
+    members_data = []
+
+    # Get number of members from hidden input
+    num_members = int(request.form.get('num_members', 0))
+
+    for m in range(num_members):
+        member_name = request.form.get(f'member_{m}_name')
+        if not member_name:
+            continue
+
+        member_items = []
+        item_index = 0
+        while True:
+            item_name = request.form.get(f'member_{m}_item_{item_index}_name')
+            item_price = request.form.get(f'member_{m}_item_{item_index}_price')
+            item_share = request.form.get(f'member_{m}_item_{item_index}_share')
+
+            if not item_name:
+                break  # No more items for this member
+
+            try:
+                item_price = float(item_price)
+                item_share = float(item_share)
+            except (ValueError, TypeError):
+                item_price = 0
+                item_share = 1
+
+            member_items.append({
+                "name": item_name,
+                "price": item_price,
+                "share": item_share
+            })
+            item_index += 1
+
+        members_data.append({
+            "name": member_name,
+            "items": member_items
+        })
+
+    # (Optional) Print or log it for testing
+    print("Parsed Manual Form Data:", members_data)
+
+    # TODO: Save to DB or pass to template
+    flash("Form submitted successfully!", "success")
+    return redirect(url_for('main.dashboard'))
