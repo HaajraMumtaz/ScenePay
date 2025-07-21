@@ -17,40 +17,42 @@
 <body>
   <h2>✍️ Manually Add Bill Details for Group: {{ group.name }}</h2>
 
-  <form action="{{ url_for('main.manual_form', group_id=group.id) }}" method="post">
+  <form action="{{ url_for('main.manual_form', group_id=group.id) }}" method="post"></form>
     {{ csrf_token() }}
 
     {% for i in range(group.num_members) %}
       <div class="member-block" id="member-block-{{ i }}">
-        <label>Member {{ i + 1 }} Name:</label>
-        <input type="text" name="members[{{ i }}][name]" required><br><br>
+        <label><strong>Member {{ i + 1 }} Username or Guest Name:</strong></label>
+        <input type="text" name="members[{{ i }}][name]" required>
+
+        <label>Is Guest?</label>
+        <input type="checkbox" name="members[{{ i }}][is_guest]" value="true"><br><br>
 
         <div id="items-{{ i }}">
-          <!-- Item entries will be appended here -->
+          <!-- Dish entries go here -->
         </div>
 
         <button type="button" onclick="addItem({{ i }})">➕ Add Dish</button>
       </div>
     {% endfor %}
 
-    <button type="submit">Submit Bill</button>
+    <button type="submit">✅ Submit Bill</button>
   </form>
 
   <script>
     function addItem(memberIndex) {
       const container = document.getElementById('items-' + memberIndex);
-
       const itemIndex = container.children.length;
 
       const html = `
         <div class="item-entry">
-          <label>Item Name:</label>
+          <label>🍽️ Item Name:</label>
           <input type="text" name="members[${memberIndex}][items][${itemIndex}][name]" required>
 
-          <label>Price:</label>
+          <label>💰 Price (PKR):</label>
           <input type="number" step="0.01" name="members[${memberIndex}][items][${itemIndex}][price]" required>
 
-          <label>Share (e.g. 1, 0.5):</label>
+          <label>🔢 Share (e.g. 1 for full, 0.5 for half):</label>
           <input type="number" step="0.01" name="members[${memberIndex}][items][${itemIndex}][share]" required>
         </div>
       `;

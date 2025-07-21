@@ -17,7 +17,7 @@
   <hr>
 
   <p>Don't have a receipt? You can still add everything manually.</p>
-  <form action="{{ url_for('main.dashboard', group_id=group_id) }}" method="get">
+  <form action="{{ url_for('main.manual_form', group_id=group_id) }}" method="get">
     <button type="submit">Continue without uploading</button>
   </form>
 </body>

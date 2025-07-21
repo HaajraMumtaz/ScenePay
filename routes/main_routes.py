@@ -2,7 +2,7 @@ from flask import Blueprint,flash, session,render_template, request, redirect, u
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import login_user,current_user,login_required
 from ..forms import LoginForm, RegisterForm, CreateGroupForm
-from ..models import User, Group
+from ..models import User, Group,Expense,ExpenseSplit
 from datetime import datetime
 from ..extensions import db
 
@@ -88,19 +88,17 @@ def submit_bill():
         </form>
     '''
 
-@main.route('/new-bill', methods=['GET', 'POST'])
-def new_bill():
-    if request.method == 'POST':
-      if request.method == 'POST':
-        bill_text = request.form.get('bill_text')
-        parsed_data = parse_bill_text(bill_text)  # You'll write this function
-        print(parsed_data)  # For now, just test it
-        return render_template('results.html', parsed_data=parsed_data)
+# @main.route('/new-bill', methods=['GET', 'POST'])
+# def new_bill():
+#     if request.method == 'POST':
+#       if request.method == 'POST':
+#         bill_text = request.form.get('bill_text')
+#         parsed_data = parse_bill_text(bill_text)  # You'll write this function
+#         print(parsed_data)  # For now, just test it
+#         return render_template('results.html', parsed_data=parsed_data)
 
-    return render_template('new_bill.html')
-@main.route('/bills')
-def view_bills():
-    return "🧾 Bills will be shown here soon!"
+#     return render_template('new_bill.html')
+
 
 @main.route('/create_group', methods=['GET', 'POST'])
 @login_required
@@ -141,60 +139,109 @@ def group_detail(group_id):
 
     return render_template('group_detail.html', group=group)
 
-@main.route('/manual_form/<int:group_id>', methods=["GET", "POST"])
-def manual_form(group_id):
-    ocr_data = session.get('ocr_items', {})  
-    form = YourMainForm() 
-
-    # ... handle form submission later
-
-    return render_template("manual_form.html", form=form, group_id=group_id, ocr_data=ocr_data)
-
-@main.route('/manual_form/<int:group_id>', methods=['POST'])
+@main.route('/manual/<int:group_id>', methods=['POST', 'GET'])
 @login_required
-def submit_manual_form(group_id):
-    members_data = []
+def manual_form(group_id):
+    group = Group.query.get_or_404(group_id)
 
-    # Get number of members from hidden input
-    num_members = int(request.form.get('num_members', 0))
+    if request.method == 'POST':
+        data = request.form
+        members = data.getlist('members')  # this doesn't work directly; we parse manually below
 
-    for m in range(num_members):
-        member_name = request.form.get(f'member_{m}_name')
-        if not member_name:
-            continue
+        for i in range(group.num_members):
+            member_prefix = f"members[{i}]"
+            member_name = data.get(f"{member_prefix}[name]")
+            
+            # ✅ Create Membership as guest
+            membership = Membership(
+                guest_name=member_name,
+                group_id=group.id,
+                is_guest=True
+            )
+            db.session.add(membership)
+            db.session.flush()  # so we can get the membership ID
 
-        member_items = []
-        item_index = 0
-        while True:
-            item_name = request.form.get(f'member_{m}_item_{item_index}_name')
-            item_price = request.form.get(f'member_{m}_item_{item_index}_price')
-            item_share = request.form.get(f'member_{m}_item_{item_index}_share')
+            j = 0
+            while True:
+                item_name = data.get(f"{member_prefix}[items][{j}][name]")
+                if not item_name:
+                    break  # no more items
 
-            if not item_name:
-                break  # No more items for this member
+                price = float(data.get(f"{member_prefix}[items][{j}][price]"))
+                share = float(data.get(f"{member_prefix}[items][{j}][share]"))
 
-            try:
-                item_price = float(item_price)
-                item_share = float(item_share)
-            except (ValueError, TypeError):
-                item_price = 0
-                item_share = 1
+                # ✅ Create Expense (for each item)
+                expense = Expense(
+                    group_id=group.id,
+                    title=item_name,
+                    amount=price,
+                    payer_id=current_user.id  # assumed current user paid all
+                )
+                db.session.add(expense)
+                db.session.flush()
 
-            member_items.append({
-                "name": item_name,
-                "price": item_price,
-                "share": item_share
-            })
-            item_index += 1
+                # ✅ Create ExpenseSplit (based on share)
+                expense_split = ExpenseSplit(
+                    expense_id=expense.id,
+                    amount=round(price * share, 2),  # calculating share
+                    user_id=None,  # unknown until guest logs in
+                    status="unpaid"
+                )
+                db.session.add(expense_split)
 
-        members_data.append({
-            "name": member_name,
-            "items": member_items
-        })
+                j += 1
 
-    # (Optional) Print or log it for testing
-    print("Parsed Manual Form Data:", members_data)
+        db.session.commit()
+        flash("Manual entries recorded!", "success")
+        return redirect(url_for('main.dashboard'))
 
-    # TODO: Save to DB or pass to template
-    flash("Form submitted successfully!", "success")
-    return redirect(url_for('main.dashboard'))
+    return render_template('manual_form.html', group=group)
+
+# @main.route('/manual_form/<int:group_id>', methods=['POST'])
+# @login_required
+# def submit_manual_form(group_id):
+#     members_data = []
+
+#     # Get number of members from hidden input
+#     num_members = int(request.form.get('num_members', 0))
+
+#     for m in range(num_members):
+#         member_name = request.form.get(f'member_{m}_name')
+#         if not member_name:
+#             continue
+
+#         member_items = []
+#         item_index = 0
+#         while True:
+#             item_name = request.form.get(f'member_{m}_item_{item_index}_name')
+#             item_price = request.form.get(f'member_{m}_item_{item_index}_price')
+#             item_share = request.form.get(f'member_{m}_item_{item_index}_share')
+
+#             if not item_name:
+#                 break  # No more items for this member
+
+#             try:
+#                 item_price = float(item_price)
+#                 item_share = float(item_share)
+#             except (ValueError, TypeError):
+#                 item_price = 0
+#                 item_share = 1
+
+#             member_items.append({
+#                 "name": item_name,
+#                 "price": item_price,
+#                 "share": item_share
+#             })
+#             item_index += 1
+
+#         members_data.append({
+#             "name": member_name,
+#             "items": member_items
+#         })
+
+#     # (Optional) Print or log it for testing
+#     print("Parsed Manual Form Data:", members_data)
+
+#     # TODO: Save to DB or pass to template
+#     flash("Form submitted successfully!", "success")
+#     return redirect(url_for('main.dashboard'))

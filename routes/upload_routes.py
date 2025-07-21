@@ -9,6 +9,6 @@ def upload_receipt(group_id):
         if file:
             parsed_data = parse_bill_text(file) 
             session['ocr_items'] = parsed_data
-        return redirect(url_for('form.form', group_id=group_id)) 
+        return redirect(url_for('main.manual_form', group_id=group_id)) 
 
     return render_template("upload.html", group_id=group_id)
