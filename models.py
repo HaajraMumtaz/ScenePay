@@ -58,3 +58,11 @@ class ExpenseSplit(db.Model):
     status=db.Column(db.String(20),default="unpaid")
     paid_at=db.Column(db.DateTime, default=timezone.utc)
 
+class Item(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    share = db.Column(db.Float, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=timezone.utc)

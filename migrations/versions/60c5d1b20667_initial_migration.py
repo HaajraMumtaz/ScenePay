@@ -1,8 +1,8 @@
-"""initial
+"""Initial migration
 
-Revision ID: 2b43dd955ca9
+Revision ID: 60c5d1b20667
 Revises: 
-Create Date: 2025-07-13 23:09:00.596548
+Create Date: 2025-07-21 22:02:16.660047
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '2b43dd955ca9'
+revision = '60c5d1b20667'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -29,6 +29,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=100), nullable=False),
     sa.Column('fk_group_owner', sa.Integer(), nullable=False),
+    sa.Column('num_members', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('description', sa.String(length=300), nullable=True),
     sa.ForeignKeyConstraint(['fk_group_owner'], ['user.id'], ),
@@ -43,6 +44,18 @@ def upgrade():
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['fk_expense_group'], ['group.id'], ),
     sa.ForeignKeyConstraint(['fk_expense_user'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('item',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=100), nullable=False),
+    sa.Column('price', sa.Float(), nullable=False),
+    sa.Column('share', sa.Float(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('group_id', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['group_id'], ['group.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('membership',
@@ -85,6 +98,7 @@ def downgrade():
     op.drop_table('expense_split')
     op.drop_table('travel_expense')
     op.drop_table('membership')
+    op.drop_table('item')
     op.drop_table('expense')
     op.drop_table('group')
     op.drop_table('user')
