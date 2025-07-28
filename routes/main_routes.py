@@ -2,7 +2,7 @@ from flask import Blueprint,flash, session,render_template, request, redirect, u
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import login_user,current_user,login_required
 from ..forms import LoginForm, RegisterForm, CreateGroupForm
-from ..models import User, Group,Expense,ExpenseSplit
+from ..models import User, Group,Expense,ExpenseSplit,Membership
 from datetime import datetime
 from ..extensions import db
 
@@ -78,7 +78,6 @@ def logout():
 def submit_bill():
     if request.method == 'POST':
         bill_text = request.form.get('bill_text')
-        # Placeholder: you'll add parsing and DB logic here later
         return f"✅ Received bill: {bill_text}"
     return '''
         <form method="POST">
@@ -146,8 +145,19 @@ def manual_form(group_id):
 
     if request.method == 'POST':
         data = request.form
-        members = data.getlist('members')  # this doesn't work directly; we parse manually below
+        members = data.getlist('members')
 
+        paid_by_index = request.form.get("paid_by")
+        paid_by_name = request.form.get(f"members[{paid_by_index}][name]") 
+
+        expense = Expense(
+            group_id=group.id,
+            payer_name=request.form.get(f"members[{paid_by_index}][name]"),
+            payer_id="None",
+            amount=0,
+            tax=request.form.get("tax"))
+        db.session.add(expense)
+        db.session.flush()
         for i in range(group.num_members):
             member_prefix = f"members[{i}]"
             member_name = data.get(f"{member_prefix}[name]")
@@ -162,35 +172,22 @@ def manual_form(group_id):
             db.session.flush()  # so we can get the membership ID
 
             j = 0
+            amount=0
             while True:
                 item_name = data.get(f"{member_prefix}[items][{j}][name]")
                 if not item_name:
                     break  # no more items
 
-                price = float(data.get(f"{member_prefix}[items][{j}][price]"))
-                share = float(data.get(f"{member_prefix}[items][{j}][share]"))
-
-                # ✅ Create Expense (for each item)
-                expense = Expense(
-                    group_id=group.id,
-                    title=item_name,
-                    amount=price,
-                    payer_id=current_user.id  # assumed current user paid all
-                )
-                db.session.add(expense)
-                db.session.flush()
-
-                # ✅ Create ExpenseSplit (based on share)
-                expense_split = ExpenseSplit(
-                    expense_id=expense.id,
-                    amount=round(price * share, 2),  # calculating share
-                    user_id=None,  # unknown until guest logs in
-                    status="unpaid"
-                )
-                db.session.add(expense_split)
-
+                amount+=(float(data.get(f"{member_prefix}[items][{j}][price]"))*float(data.get(f"{member_prefix}[items][{j}][share]")))
                 j += 1
-
+            amount+=request.form.get("tax")/group.num_members
+            expense_split = ExpenseSplit(
+                expense_id=expense.id,
+                amount=amount,  # calculating share
+                user_id=None,  # unknown until guest logs in
+                status="unpaid"
+            )
+            db.session.add(expense_split)
         db.session.commit()
         flash("Manual entries recorded!", "success")
         return redirect(url_for('main.dashboard'))

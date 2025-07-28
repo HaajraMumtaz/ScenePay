@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Manual Entry Form - BillSplitter+</title>
@@ -9,34 +10,53 @@
       padding: 12px;
       margin-bottom: 20px;
     }
+
     .item-entry {
       margin-bottom: 8px;
     }
   </style>
 </head>
+
 <body>
   <h2>✍️ Manually Add Bill Details for Group: {{ group.name }}</h2>
 
   <form action="{{ url_for('main.manual_form', group_id=group.id) }}" method="post"></form>
-    {{ csrf_token() }}
+  {{ csrf_token() }}
 
+  {% for i in range(group.num_members) %}
+  <div class="member-block" id="member-block-{{ i }}">
+    <label><strong>Member {{ i + 1 }} Username or Guest Name:</strong></label>
+    <input type="text" name="members[{{ i }}][name]" required>
+
+    <label>Is Guest?</label>
+    <input type="checkbox" name="members[{{ i }}][is_guest]" value="true"><br><br>
+
+    <div id="items-{{ i }}">
+      <!-- Dish entries go here -->
+    </div>
+
+    <button type="button" onclick="addItem({{ i }})">➕ Add Dish</button>
+  </div>
+  {% endfor %}
+  <hr>
+
+  <!-- Who Paid -->
+  <label for="paid_by">Who Paid?</label>
+  <select name="paid_by" required>
     {% for i in range(group.num_members) %}
-      <div class="member-block" id="member-block-{{ i }}">
-        <label><strong>Member {{ i + 1 }} Username or Guest Name:</strong></label>
-        <input type="text" name="members[{{ i }}][name]" required>
-
-        <label>Is Guest?</label>
-        <input type="checkbox" name="members[{{ i }}][is_guest]" value="true"><br><br>
-
-        <div id="items-{{ i }}">
-          <!-- Dish entries go here -->
-        </div>
-
-        <button type="button" onclick="addItem({{ i }})">➕ Add Dish</button>
-      </div>
+    <option value="{{ i }}">{{ request.form.get('members[' ~ i ~ '][name]', 'Member ' ~ (i + 1)) }}</option>
     {% endfor %}
+  </select>
 
-    <button type="submit">✅ Submit Bill</button>
+  <br><br>
+
+  <!-- Tax -->
+  <label for="tax">Tax Amount:</label>
+  <input type="number" name="tax" step="0.01" min="0">
+
+  <br><br>
+
+  <button type="submit">✅ Submit Bill</button>
   </form>
 
   <script>
@@ -61,4 +81,5 @@
     }
   </script>
 </body>
+
 </html>

@@ -45,6 +45,7 @@ class Expense(db.Model):
     id=db.Column(db.Integer,primary_key=True,nullable=False)
     group_id=db.Column(db.Integer,db.ForeignKey("group.id"),name='fk_expense_group',nullable=False)
     title=db.Column(db.String(80),nullable=False)
+    tax = db.Column(db.Float, default=0.0)
     amount=db.Column(db.Float,nullable=False)
     payer_id=db.Column(db.Integer,db.ForeignKey("user.id"),name='fk_expense_user',nullable=False)
     created_at = db.Column(db.DateTime, default=timezone.utc)
