@@ -1,6 +1,6 @@
 from flask import Flask
 from .extensions import db, login_manager,migrate,csrf
-
+from flask_wtf.csrf import generate_csrf
 from .config import Config
 
 
@@ -21,5 +21,10 @@ def create_app():
 
     from .routes import register_blueprints
     register_blueprints(app)
-
+    @app.context_processor
+    def inject_csrf_token():
+     return dict(csrf_token=generate_csrf())
     return app
+
+
+

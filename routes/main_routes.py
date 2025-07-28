@@ -141,8 +141,9 @@ def group_detail(group_id):
 @main.route('/manual/<int:group_id>', methods=['POST', 'GET'])
 @login_required
 def manual_form(group_id):
+    print("umm")
     group = Group.query.get_or_404(group_id)
-
+    
     if request.method == 'POST':
         data = request.form
         members = data.getlist('members')
@@ -158,6 +159,7 @@ def manual_form(group_id):
             tax=request.form.get("tax"))
         db.session.add(expense)
         db.session.flush()
+        print("here")
         for i in range(group.num_members):
             member_prefix = f"members[{i}]"
             member_name = data.get(f"{member_prefix}[name]")
@@ -175,6 +177,7 @@ def manual_form(group_id):
             amount=0
             while True:
                 item_name = data.get(f"{member_prefix}[items][{j}][name]")
+                print("name:{item_name}")
                 if not item_name:
                     break  # no more items
 
@@ -192,7 +195,7 @@ def manual_form(group_id):
         flash("Manual entries recorded!", "success")
         return redirect(url_for('main.dashboard'))
 
-    return render_template('manual_form.html', group=group)
+    return render_template('manual_form.html', group_id=group_id,group=group)
 
 # @main.route('/manual_form/<int:group_id>', methods=['POST'])
 # @login_required

@@ -16,12 +16,12 @@
     }
   </style>
 </head>
-
+<form method="post" action="{{ url_for('main.manual_form',group_id=group_id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 <body>
   <h2>✍️ Manually Add Bill Details for Group: {{ group.name }}</h2>
 
-  <form action="{{ url_for('main.manual_form', group_id=group.id) }}" method="post"></form>
-  {{ csrf_token() }}
+ 
 
   {% for i in range(group.num_members) %}
   <div class="member-block" id="member-block-{{ i }}">
