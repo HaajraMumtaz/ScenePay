@@ -34,12 +34,12 @@ class Group(db.Model):
 
 class Membership(db.Model):
     id=db.Column(db.Integer,primary_key=True)
-    user_id=db.Column(db.Integer,db.ForeignKey('user.id'),name='fk_membership_user',nullable=False)
+    user_id=db.Column(db.Integer,db.ForeignKey('user.id'),name='fk_membership_user',nullable=True)
     group_id=db.Column(db.Integer,db.ForeignKey('group.id'),name='fk_membership_groupr',nullable=False)
     is_guest=db.Column(db.Boolean,default=False)
     guest_name=db.Column(db.String(80))
     status=db.Column(db.String(20),default="Pending")
-    joined_at=db.Column(db.DateTime,default=timezone.utc)
+    joined_at=db.Column(db.DateTime,default=lambda: datetime.now(timezone.utc))
 
 class Expense(db.Model):
     id=db.Column(db.Integer,primary_key=True,nullable=False)
@@ -48,16 +48,16 @@ class Expense(db.Model):
     tax = db.Column(db.Float, default=0.0)
     amount=db.Column(db.Float,nullable=False)
     payer_id=db.Column(db.Integer,db.ForeignKey("user.id"),name='fk_expense_user',nullable=False)
-    created_at = db.Column(db.DateTime, default=timezone.utc)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     ExpenseSplit=db.relationship("ExpenseSplit",backref="TotalSpent")
 
 class ExpenseSplit(db.Model):
     id=db.Column(db.Integer, primary_key=True)
-    expense_id=db.Column(db.Integer,db.ForeignKey("expense.id"),name='fk_split_main',nullable=False)
-    user_id=db.Column(db.Integer,db.ForeignKey("user.id"),name='fk_split_user',nullable=False)
+    expense_id=db.Column(db.Integer,db.ForeignKey("expense.id"),name='fk_split_main',nullable=True)
+    user_id=db.Column(db.Integer,db.ForeignKey("user.id"),name='fk_split_user',nullable=True)
     amount=db.Column(db.Float)
     status=db.Column(db.String(20),default="unpaid")
-    paid_at=db.Column(db.DateTime, default=timezone.utc)
+    paid_at=db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -66,4 +66,4 @@ class Item(db.Model):
     share = db.Column(db.Float, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=timezone.utc)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))

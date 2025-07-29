@@ -153,10 +153,11 @@ def manual_form(group_id):
 
         expense = Expense(
             group_id=group.id,
-            payer_name=request.form.get(f"members[{paid_by_index}][name]"),
             payer_id="None",
             amount=0,
-            tax=request.form.get("tax"))
+            tax=request.form.get("tax"),
+            title="something")
+            
         db.session.add(expense)
         db.session.flush()
         print("here")
@@ -183,7 +184,7 @@ def manual_form(group_id):
 
                 amount+=(float(data.get(f"{member_prefix}[items][{j}][price]"))*float(data.get(f"{member_prefix}[items][{j}][share]")))
                 j += 1
-            amount+=request.form.get("tax")/group.num_members
+            amount+=(float(request.form.get("tax"))/int(group.num_members))
             expense_split = ExpenseSplit(
                 expense_id=expense.id,
                 amount=amount,  # calculating share
