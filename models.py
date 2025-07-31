@@ -47,13 +47,14 @@ class Expense(db.Model):
     title=db.Column(db.String(80),nullable=False)
     tax = db.Column(db.Float, default=0.0)
     amount=db.Column(db.Float,nullable=False)
-    payer_id=db.Column(db.Integer,db.ForeignKey("user.id"),name='fk_expense_user',nullable=False)
+    payer_id=db.Column(db.Integer,db.ForeignKey("user.id"),name='fk_expense_user',nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     ExpenseSplit=db.relationship("ExpenseSplit",backref="TotalSpent")
 
 class ExpenseSplit(db.Model):
     id=db.Column(db.Integer, primary_key=True)
     expense_id=db.Column(db.Integer,db.ForeignKey("expense.id"),name='fk_split_main',nullable=True)
+    guest_name = db.Column(db.String(100)) 
     user_id=db.Column(db.Integer,db.ForeignKey("user.id"),name='fk_split_user',nullable=True)
     amount=db.Column(db.Float)
     status=db.Column(db.String(20),default="unpaid")

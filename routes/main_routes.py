@@ -131,13 +131,38 @@ def create_group():
 def group_detail(group_id):
     group = Group.query.get_or_404(group_id)
 
-    # (Optional) verify user is allowed to view:
-    if group.created_by != current_user.id:
-        flash("You do not have permission to view this group.", "danger")
-        return redirect(url_for('main.dashboard'))
+    # Assume only one expense per group for now
+    expense = Expense.query.filter_by(group_id=group.id).first()
 
-    return render_template('group_detail.html', group=group)
+    # Collect per-user payment info
+    payment_info = []
 
+    if expense:
+        splits = ExpenseSplit.query.filter_by(expense_id=expense.id).all()
+      
+        for split in splits:
+              user = User.query.get(split.user_id)
+
+        # Find corresponding Membership for this user in this group
+        membership = Membership.query.filter_by(
+            user_id=split.user_id,
+            group_id=group.id
+        ).first()
+
+        if membership and membership.is_guest:
+            name = membership.guest_name or "Guest User"
+        elif user:
+            name = user.username
+        else:
+            name = "Unknown User"
+
+        payment_info.append({
+            'username': name,
+            'amount': split.amount,
+            'status': split.status
+        })
+
+    return render_template('group_detail.html', group=group, payment_info=payment_info)
 @main.route('/manual/<int:group_id>', methods=['POST', 'GET'])
 @login_required
 def manual_form(group_id):
@@ -192,6 +217,17 @@ def manual_form(group_id):
                 status="unpaid"
             )
             db.session.add(expense_split)
+            print("added for:"+expense_split)
+
+# Get the correct name: guest or real user
+            if membership and membership.is_guest:
+                name = membership.guest_name or "Guest"
+            else:
+                user = User.query.get(user_id)
+                name = user.username if user else "Unknown User"
+
+
+            print(f"✅ Added ExpenseSplit for: {name} — ₹{amount}")
         db.session.commit()
         flash("Manual entries recorded!", "success")
         return redirect(url_for('main.dashboard'))
