@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timezone
 from .extensions import db
 from flask_login import UserMixin
+from uuid import uuid4
 from . import login_manager
 class TravelExpense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -31,6 +32,7 @@ class Group(db.Model):
     members = db.relationship("Membership", backref="group")
     expenses = db.relationship("Expense", backref="group")
     travel_expenses = db.relationship("TravelExpense", backref="group")
+    invite_code = db.Column(db.String(100), unique=True, default=lambda: str(uuid4()))
 
 class Membership(db.Model):
     id=db.Column(db.Integer,primary_key=True)

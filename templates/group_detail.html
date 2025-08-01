@@ -1,6 +1,12 @@
 <h2>{{ group.name }}</h2>
 <p>{{ group.description or 'No description provided.' }}</p>
 <p>Created on: {{ group.created_at.strftime("%Y-%m-%d") }}</p>
+<br>
+<br>
+<br>
+<p><strong>Invite Link:</strong> 
+  {{ request.host_url }}join/{{ group.invite_code }}
+</p>
 
 <h4>Payment Overview</h4>
 <ul>
