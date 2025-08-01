@@ -6,7 +6,18 @@
 <ul>
   {% for entry in payment_info %}
     <li>
-      {{ entry.username }} — owes ₹{{ "%.2f"|format(entry.amount) }} —
+      {{ entry.username }} — owes ₹{{ "%.2f"|format(entry.amount) }}
+
+      <form action="{{ url_for('main.group_detail', group_id=group.id) }}" method="POST" style="display:inline;">
+         <input type="hidden" name="csrf_token" value="{{ new_token }}">
+        <input type="hidden" name="split_id" value="{{ entry.id }}">
+        <select name="status">
+          <option value="paid" {% if entry.status == 'paid' %}selected{% endif %}>Paid</option>
+          <option value="unpaid" {% if entry.status == 'unpaid' %}selected{% endif %}>Unpaid</option>
+        </select>
+        <button type="submit">Update</button>
+      </form>
+
       {% if entry.status == 'paid' %}
         <span style="color: green;">✅ Paid</span>
       {% else %}
@@ -15,6 +26,5 @@
     </li>
   {% endfor %}
 </ul>
-
 
 <a href="{{ url_for('main.dashboard') }}">← Back to dashboard</a>

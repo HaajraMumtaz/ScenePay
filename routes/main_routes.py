@@ -1,6 +1,6 @@
 from flask import Blueprint,flash, session,render_template, request, redirect, url_for
 from werkzeug.security import generate_password_hash,check_password_hash
-from flask_login import login_user,current_user,login_required
+from flask_login import login_user,current_user,login_required,logout_user
 from ..forms import LoginForm, RegisterForm, CreateGroupForm
 from ..models import User, Group,Expense,ExpenseSplit,Membership
 from datetime import datetime
@@ -24,7 +24,6 @@ def register():
         # Check if user already exists
         existing_user = User.query.filter_by(username=username).first()
         if existing_user:
-            flash('Username already exists. Try a different one.', 'danger')
             return render_template('register.html', form=form)
 
         # Create user
@@ -33,8 +32,6 @@ def register():
         db.session.add(new_user)
         db.session.commit()
         login_user(new_user)
-
-        flash('Registration successful! You are now logged in.', 'success')
         print("ok")
         return redirect(url_for('main.dashboard'))
 
@@ -50,10 +47,7 @@ def login():
 
         if user and check_password_hash(user.password, password):
             login_user(user)
-            flash("Login successful!", "success")
             return redirect(url_for('main.dashboard'))
-        else:
-            flash("Invalid username or password.", "danger")
 
     return render_template('login.html', form=form)
 
@@ -69,11 +63,7 @@ def dashboard():
         groups=user_groups
     )
 
-@main.route('/logout')
-def logout():
-    session.clear()
-    flash("Logged out!")
-    return redirect('/login')
+
 @main.route('/submit', methods=['GET', 'POST'])
 def submit_bill():
     if request.method == 'POST':
@@ -113,7 +103,6 @@ def create_group():
         )
         db.session.add(new_group)
         db.session.commit()
-        flash('Group created successfully!', 'success')
  
         return redirect(url_for('upload.upload_receipt', group_id=new_group.id))
     
@@ -126,43 +115,46 @@ def create_group():
 # def groups():
 #     user_groups = Group.query.filter_by(created_by=current_user.id).all()
 #     return render_template('groups.html', groups=user_groups)
-@main.route('/group/<int:group_id>')
+@main.route('/group/<int:group_id>',methods=['GET', 'POST'])
 @login_required
 def group_detail(group_id):
     group = Group.query.get_or_404(group_id)
 
-    # Assume only one expense per group for now
-    expense = Expense.query.filter_by(group_id=group.id).first()
+    # Handle form submission if user changed a dropdown
+    if request.method == 'POST':
+        split_id = request.form.get('split_id')
+        new_status = request.form.get('status')
 
-    # Collect per-user payment info
+        if split_id and new_status in ['paid', 'unpaid']:
+            split = ExpenseSplit.query.get(int(split_id))
+            if split:
+                split.status = new_status
+                db.session.commit()
+
+
+    # Regular data fetch and render
+    expense = Expense.query.filter_by(group_id=group.id).first()
     payment_info = []
 
     if expense:
         splits = ExpenseSplit.query.filter_by(expense_id=expense.id).all()
-      
+
         for split in splits:
-              user = User.query.get(split.user_id)
+            if split.user_id:
+                user = User.query.get(split.user_id)
+                name = user.username if user else "Unknown User"
+            else:
+                name = split.guest_name or "Guest"
 
-        # Find corresponding Membership for this user in this group
-        membership = Membership.query.filter_by(
-            user_id=split.user_id,
-            group_id=group.id
-        ).first()
-
-        if membership and membership.is_guest:
-            name = membership.guest_name or "Guest User"
-        elif user:
-            name = user.username
-        else:
-            name = "Unknown User"
-
-        payment_info.append({
-            'username': name,
-            'amount': split.amount,
-            'status': split.status
-        })
+            payment_info.append({
+                'id': split.id,
+                'username': name,
+                'amount': split.amount,
+                'status': split.status
+            })
 
     return render_template('group_detail.html', group=group, payment_info=payment_info)
+
 @main.route('/manual/<int:group_id>', methods=['POST', 'GET'])
 @login_required
 def manual_form(group_id):
@@ -214,10 +206,11 @@ def manual_form(group_id):
                 expense_id=expense.id,
                 amount=amount,  # calculating share
                 user_id=None,  # unknown until guest logs in
-                status="unpaid"
+                status="unpaid",
+                guest_name=member_name
             )
             db.session.add(expense_split)
-            print("added for:"+expense_split)
+            print("added for:"+member_name)
 
 # Get the correct name: guest or real user
             if membership and membership.is_guest:
@@ -229,10 +222,16 @@ def manual_form(group_id):
 
             print(f"✅ Added ExpenseSplit for: {name} — ₹{amount}")
         db.session.commit()
-        flash("Manual entries recorded!", "success")
+
         return redirect(url_for('main.dashboard'))
 
     return render_template('manual_form.html', group_id=group_id,group=group)
+
+@main.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('main.login'))  # or wherever your login route is
 
 # @main.route('/manual_form/<int:group_id>', methods=['POST'])
 # @login_required

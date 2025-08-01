@@ -17,7 +17,7 @@
   </style>
 </head>
 <form method="post" action="{{ url_for('main.manual_form',group_id=group_id) }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token () }}">
 <body>
   <h2>✍️ Manually Add Bill Details for Group: {{ group.name }}</h2>
 

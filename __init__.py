@@ -23,7 +23,7 @@ def create_app():
     register_blueprints(app)
     @app.context_processor
     def inject_csrf_token():
-     return dict(csrf_token=generate_csrf())
+     return dict(new_token=generate_csrf())
     return app
 
 
